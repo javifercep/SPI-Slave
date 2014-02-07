@@ -7,6 +7,16 @@
  * or the GNU Lesser General Public License version 2.1, both as
  * published by the Free Software Foundation.
  */
+ 
+/*
+ * Modified by (February 2014): AESS Estudiants - <aess@aess.upc.es>
+ * Function changes:
+ *	SPI.begin(mode) --> mode: SPI_MASTER or SPI_SLAVE
+ *	SPI.attachInterrupt(function) --> function is the SPI ISR. When a interrupt occurs it will be called. 
+ *	This function must take no parameters and return nothing.
+ *
+ *	Other functions act as the standard library
+ */
 
 #include "pins_arduino.h"
 #include "SPI.h"
@@ -15,32 +25,33 @@ static volatile voidFuncPtr intSPIFunc;
 
 SPIClass SPI;
 
+/*Modification*/
 void SPIClass::begin(byte _mode) {
-
-  // Set SS to high so a connected chip will be "deselected" by default
-  digitalWrite(SS, HIGH);
-
-  // When the SS pin is set as OUTPUT, it can be used as
-  // a general purpose output port (it doesn't influence
-  // SPI operations).
-  pinMode(SS, OUTPUT);
 
   // Warning: if the SS pin ever becomes a LOW INPUT then SPI
   // automatically switches to Slave, so the data direction of
   // the SS pin MUST be kept as OUTPUT.
  if(_mode == SPI_MASTER)
  {
-  SPCR |= _BV(MSTR);
-  pinMode(SCK, OUTPUT);
-  pinMode(MOSI, OUTPUT);
-  pinMode(MISO,INPUT);
-  }
-  else if( _mode == SPI_SLAVE)
-  {
-  pinMode(MOSI,INPUT);
-  pinMode(SCK,INPUT);
-  pinMode(MISO,OUTPUT);
-  }
+	// Set SS to high so a connected chip will be "deselected" by default
+	digitalWrite(SS, HIGH);
+	// When the SS pin is set as OUTPUT, it can be used as
+	// a general purpose output port (it doesn't influence
+	// SPI operations).
+	pinMode(SS, OUTPUT);
+
+	SPCR |= _BV(MSTR);
+	pinMode(SCK, OUTPUT);
+	pinMode(MOSI, OUTPUT);
+	//pinMode(MISO,INPUT);
+ }
+ else if( _mode == SPI_SLAVE)
+ {
+	pinMode(MOSI,INPUT);
+	pinMode(SCK,INPUT);
+	pinMode(MISO,OUTPUT);
+	pinMode(SS, INPUT);
+ }
 
   SPCR |= _BV(SPE);
   
@@ -79,6 +90,7 @@ void SPIClass::setClockDivider(uint8_t rate)
   SPSR = (SPSR & ~SPI_2XCLOCK_MASK) | ((rate >> 2) & SPI_2XCLOCK_MASK);
 }
 
+/*Modification*/
 void SPIClass::attachInterrupt(void (*userFunc)(void)) {
   intSPIFunc = userFunc;
   SPCR |= _BV(SPIE);
@@ -88,6 +100,7 @@ void SPIClass::detachInterrupt() {
   SPCR &= ~_BV(SPIE);
 }
 
+/* Added */
 ISR(SPI_STC_vect)
 {
 	if(intSPIFunc)

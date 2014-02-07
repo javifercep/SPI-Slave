@@ -7,6 +7,16 @@
  * or the GNU Lesser General Public License version 2.1, both as
  * published by the Free Software Foundation.
  */
+ 
+/*
+ * Modified by (February 2014): AESS Estudiants - <aess@aess.upc.es>
+ * Function changes:
+ *	SPI.begin(mode) --> mode: SPI_MASTER or SPI_SLAVE
+ *	SPI.attachInterrupt(function) --> function is the SPI ISR. When a interrupt occurs it will be called. 
+ *	This function must take no parameters and return nothing.
+ *
+ *	Other functions act as the standard library
+ */
 
 #ifndef _SPI_H_INCLUDED
 #define _SPI_H_INCLUDED
@@ -61,7 +71,8 @@ extern SPIClass SPI;
 byte SPIClass::transfer(byte _data) {
 byte receive;
  
-if(SPCR & _BV(MSTR))
+ /* Modification */
+if(SPCR & _BV(MSTR)) //Check if Arduino is configured as Master or Slave
  {
    SPDR = _data;
    while (!(SPSR & _BV(SPIF)));
